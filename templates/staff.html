@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Staff Panel</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Hospital staff panel styling */
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+        
+        .staff-header {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(40,167,69,0.3);
+        }
+        
+        .staff-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header-custom {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+            padding: 1.5rem;
+        }
+        
+        .current-serving-card {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(40,167,69,0.3);
+        }
+        
+        .serving-ticket-number {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .call-next-btn {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255,107,53,0.3);
+        }
+        
+        .call-next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,107,53,0.4);
+            background: linear-gradient(45deg, #ff8a65, #ffb74d);
+        }
+        
+        .call-next-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .complete-btn {
+            background: linear-gradient(45deg, #6f42c1, #8e44ad);
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .complete-btn:hover {
+            background: linear-gradient(45deg, #7952b3, #9c27b0);
+            transform: translateY(-2px);
+        }
+        
+        .waiting-ticket-item {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .waiting-ticket-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+        
+        .ticket-number-badge {
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .time-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .no-tickets-message {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .stats-card {
+            background: linear-gradient(45deg, #17a2b8, #20c997);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Staff Panel Header -->
+        <div class="staff-header text-center">
+            <h1 class="mb-3">
+                <i class="fas fa-user-md fa-2x me-3"></i>
+                Hospital Staff Panel
+            </h1>
+            <p class="fs-5 mb-0">Manage patient queue and call next tickets</p>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Current Serving & Controls -->
+            <div class="col-lg-6">
+                <!-- Currently Serving Section -->
+                <div class="current-serving-card">
+                    <h3 class="mb-3">
+                        <i class="fas fa-stethoscope me-2"></i>
+                        Currently Serving
+                    </h3>
+                    {% if current_serving %}
+                        <div id="currentServingTicket" class="serving-ticket-number">
+                            {{ current_serving.ticket_number }}
+                        </div>
+                        <p class="fs-5 mb-3">Patient is being attended to</p>
+                        <button onclick="completeCurrentTicket()" class="btn complete-btn">
+                            <i class="fas fa-check me-2"></i>
+                            Mark as Completed
+                        </button>
+                    {% else %}
+                        <div id="currentServingTicket" class="serving-ticket-number">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <p class="fs-5 mb-0">No patient currently being served</p>
+                    {% endif %}
+                </div>
+
+                <!-- Call Next Ticket Section -->
+                <div class="staff-card">
+                    <div class="card-header-custom">
+                        <h4 class="mb-0">
+                            <i class="fas fa-bullhorn me-2"></i>
+                            Queue Management
+                        </h4>
+                    </div>
+                    <div class="card-body text-center p-4">
+                        <p class="mb-4">Click the button below to call the next patient in queue</p>
+                        
+                        <button id="callNextBtn" onclick="callNextTicket()" class="btn call-next-btn">
+                            <i class="fas fa-volume-up me-2"></i>
+                            Call Next Ticket
+                        </button>
+                        
+                        <div class="mt-4">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="stats-card">
+                                        <div id="waitingCount" class="stats-number">{{ waiting_tickets|length }}</div>
+                                        <small>Waiting</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stats-card">
+                                        <div id="currentTime" class="stats-number"></div>
+                                        <small>Current Time</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Waiting Queue List -->
+            <div class="col-lg-6">
+                <div class="staff-card">
+                    <div class="card-header-custom">
+                        <h4 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Waiting Queue (<span id="queueCount">{{ waiting_tickets|length }}</span>)
+                        </h4>
+                    </div>
+                    <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                        <div id="waitingTicketsList">
+                            {% if waiting_tickets %}
+                                {% for ticket in waiting_tickets %}
+                                    <div class="waiting-ticket-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="ticket-number-badge">{{ ticket.ticket_number }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="time-badge">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ ticket.timestamp[:8] if ticket.timestamp else 'Unknown' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-tickets-message">
+                                    <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+                                    <h5>No Tickets in Queue</h5>
+                                    <p>All patients have been served or no tickets have been issued yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links Section -->
+                <div class="staff-card mt-3">
+                    <div class="card-body text-center">
+                        <h5 class="mb-3">Quick Links</h5>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <a href="/display" class="btn btn-outline-info" target="_blank">
+                                <i class="fas fa-tv me-1"></i>
+                                Display Screen
+                            </a>
+                            <a href="/get_ticket" class="btn btn-outline-primary" target="_blank">
+                                <i class="fas fa-ticket-alt me-1"></i>
+                                Ticket Page
+                            </a>
+                            <button onclick="refreshData()" class="btn btn-outline-success">
+                                <i class="fas fa-sync-alt me-1"></i>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Processing request...</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Function to call next ticket in queue
+        function callNextTicket() {
+            const callNextBtn = document.getElementById('callNextBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            // Disable button and show loading
+            callNextBtn.disabled = true;
+            callNextBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Calling...';
+            loadingOverlay.style.display = 'flex';
+            
+            fetch('/call_next', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading overlay
+                loadingOverlay.style.display = 'none';
+                
+                if (data.success) {
+                    // Show success message
+                    showAlert('success', data.message);
+                    
+                    // Refresh the page data
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    // Show error message
+                    showAlert('danger', data.message);
+                    
+                    // Re-enable button
+                    callNextBtn.disabled = false;
+                    callNextBtn.innerHTML = '<i class="fas fa-volume-up me-2"></i>Call Next Ticket';
+                }
+            })
+            .catch(error => {
+                loadingOverlay.style.display = 'none';
+                showAlert('danger', 'Error calling next ticket. Please try again.');
+                console.error('Error:', error);
+                
+                // Re-enable button
+                callNextBtn.disabled = false;
+                callNextBtn.innerHTML = '<i class="fas fa-volume-up me-2"></i>Call Next Ticket';
+            });
+        }
+        
+        // Function to mark current ticket as completed
+        function completeCurrentTicket() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+            
+            fetch('/complete_current', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingOverlay.style.display = 'none';
+                
+                if (data.success) {
+                    showAlert('success', data.message);
+                    
+                    // Refresh the page after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('danger', data.message);
+                }
+            })
+            .catch(error => {
+                loadingOverlay.style.display = 'none';
+                showAlert('danger', 'Error completing ticket. Please try again.');
+                console.error('Error:', error);
+            });
+        }
+        
+        // Function to refresh page data
+        function refreshData() {
+            window.location.reload();
+        }
+        
+        // Function to show alert messages
+        function showAlert(type, message) {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Add alert to page
+            document.body.appendChild(alertDiv);
+            
+            // Auto-remove alert after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Function to update current time display
+        function updateCurrentTime() {
+            const currentTimeElement = document.getElementById('currentTime');
+            if (currentTimeElement) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                currentTimeElement.textContent = timeString;
+            }
+        }
+        
+        // Initialize page functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update time immediately and then every second
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(event) {
+                // Press 'N' to call next ticket
+                if ((event.key === 'n' || event.key === 'N') && !event.ctrlKey && !event.altKey) {
+                    const callNextBtn = document.getElementById('callNextBtn');
+                    if (callNextBtn && !callNextBtn.disabled) {
+                        callNextTicket();
+                    }
+                }
+                
+                // Press 'C' to complete current ticket
+                if ((event.key === 'c' || event.key === 'C') && !event.ctrlKey && !event.altKey) {
+                    const currentServing = document.getElementById('currentServingTicket').textContent.trim();
+                    if (currentServing && !currentServing.includes('clock')) {
+                        completeCurrentTicket();
+                    }
+                }
+                
+                // Press 'R' to refresh
+                if ((event.key === 'r' || event.key === 'R') && !event.ctrlKey && !event.altKey) {
+                    refreshData();
+                }
+            });
+            
+            // Show keyboard shortcuts on page load
+            setTimeout(() => {
+                showAlert('info', 'Keyboard shortcuts: N = Call Next, C = Complete Current, R = Refresh');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

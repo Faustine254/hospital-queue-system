@@ -1,0 +1,8 @@
+hospital_queue/
+├── app.py              # Main Flask app
+├── templates/          # HTML templates
+│   ├── get_ticket.html # Patient interface
+│   ├── display.html    # Display screen
+│   └── staff.html      # Staff panel
+├── database.db         # SQLite database (auto-created)
+└── requirements.txt    # Dependencies

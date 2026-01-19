@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Hospital Queue Ticket</title>
+    <!-- Bootstrap 5 CSS for clean UI -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Hospital-style colors (light blue/white) */
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .hospital-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 2px solid #2196f3;
+        }
+        
+        .hospital-header {
+            background: linear-gradient(45deg, #2196f3, #1976d2);
+            color: white;
+            border-radius: 13px 13px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .get-ticket-btn {
+            background: linear-gradient(45deg, #4caf50, #2e7d32);
+            border: none;
+            border-radius: 50px;
+            padding: 1.5rem 3rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(76,175,80,0.3);
+        }
+        
+        .get-ticket-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(76,175,80,0.4);
+            background: linear-gradient(45deg, #66bb6a, #388e3c);
+        }
+        
+        .ticket-display {
+            background: linear-gradient(45deg, #fff3e0, #ffe0b2);
+            border: 3px solid #ff9800;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+        
+        .ticket-number {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #e65100;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .print-btn {
+            background: #9c27b0;
+            border: none;
+            border-radius: 25px;
+            padding: 0.8rem 2rem;
+            color: white;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        
+        .print-btn:hover {
+            background: #7b1fa2;
+            transform: translateY(-2px);
+        }
+        
+        .loading-spinner {
+            display: none;
+        }
+        
+        .hospital-info {
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-8 col-lg-6">
+                <!-- Main Hospital Card -->
+                <div class="hospital-card">
+                    <!-- Header -->
+                    <div class="hospital-header">
+                        <i class="fas fa-hospital fa-3x mb-3"></i>
+                        <h1 class="mb-2">Hospital Queue System</h1>
+                        <p class="mb-0">Click below to get your queue ticket</p>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-4 text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-ticket-alt fa-4x text-primary mb-3"></i>
+                            <h3 class="text-primary">Get Your Queue Ticket</h3>
+                            <p class="text-muted">Click the button below to receive your queue number and wait for your turn</p>
+                        </div>
+                        
+                        <!-- Get Ticket Button -->
+                        <button id="getTicketBtn" class="btn get-ticket-btn">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Get Ticket
+                        </button>
+                        
+                        <!-- Loading Spinner -->
+                        <div id="loadingSpinner" class="loading-spinner mt-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Generating ticket...</span>
+                            </div>
+                            <p class="mt-2">Generating your ticket...</p>
+                        </div>
+                        
+                        <!-- Ticket Display Area -->
+                        <div id="ticketDisplay" class="ticket-display">
+                            <h4 class="text-success mb-3">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Your Ticket Number
+                            </h4>
+                            <div id="ticketNumber" class="ticket-number">H001</div>
+                            <p class="mt-3 mb-3">Please wait for your number to be called</p>
+                            <button onclick="printTicket()" class="btn print-btn">
+                                <i class="fas fa-print me-2"></i>
+                                Print Ticket
+                            </button>
+                            <button onclick="getNewTicket()" class="btn btn-outline-primary ms-2">
+                                <i class="fas fa-redo me-2"></i>
+                                Get Another Ticket
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hospital Information -->
+                <div class="hospital-info text-center">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Important Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <i class="fas fa-clock text-warning"></i>
+                            <small class="d-block">Average Wait Time: 15-30 minutes</small>
+                        </div>
+                        <div class="col-md-6">
+                            <i class="fas fa-tv text-info"></i>
+                            <small class="d-block">Check the display screen for updates</small>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="/display" class="btn btn-outline-info btn-sm me-2">
+                            <i class="fas fa-eye me-1"></i>
+                            View Display Screen
+                        </a>
+                        <a href="/staff" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-user-md me-1"></i>
+                            Staff Panel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Get references to DOM elements
+        const getTicketBtn = document.getElementById('getTicketBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const ticketDisplay = document.getElementById('ticketDisplay');
+        const ticketNumber = document.getElementById('ticketNumber');
+        
+        // Add click event listener to "Get Ticket" button
+        getTicketBtn.addEventListener('click', function() {
+            // Show loading spinner and hide button
+            getTicketBtn.style.display = 'none';
+            loadingSpinner.style.display = 'block';
+            
+            // Make AJAX request to issue new ticket
+            fetch('/issue_ticket', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+                
+                if (data.success) {
+                    // Display the issued ticket number
+                    ticketNumber.textContent = data.ticket_number;
+                    ticketDisplay.style.display = 'block';
+                    
+                    // Show success message
+                    showAlert('success', `Ticket ${data.ticket_number} issued successfully!`);
+                } else {
+                    // Show error message
+                    showAlert('danger', data.message);
+                    getTicketBtn.style.display = 'inline-block';
+                }
+            })
+            .catch(error => {
+                // Handle network or other errors
+                loadingSpinner.style.display = 'none';
+                getTicketBtn.style.display = 'inline-block';
+                showAlert('danger', 'Error issuing ticket. Please try again.');
+                console.error('Error:', error);
+            });
+        });
+        
+        // Function to print the ticket (generates and downloads PDF)
+        function printTicket() {
+            const ticketNum = ticketNumber.textContent;
+            
+            // Show loading state
+            const printBtn = document.querySelector('.print-btn');
+            const originalText = printBtn.innerHTML;
+            printBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
+            printBtn.disabled = true;
+            
+            // Create a link to download the PDF
+            const printUrl = `/print_ticket/${ticketNum}`;
+            const link = document.createElement('a');
+            link.href = printUrl;
+            link.download = `ticket_${ticketNum}.pdf`;
+            link.style.display = 'none';
+            
+            // Add to DOM, click, and remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Reset button after a short delay
+            setTimeout(() => {
+                printBtn.innerHTML = originalText;
+                printBtn.disabled = false;
+                showAlert('success', 'PDF ticket generated successfully!');
+            }, 2000);
+        }
+        
+        // Function to get a new ticket (reset the form)
+        function getNewTicket() {
+            ticketDisplay.style.display = 'none';
+            getTicketBtn.style.display = 'inline-block';
+        }
+        
+        // Function to show alert messages
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert alert after the ticket display or button
+            const insertAfter = ticketDisplay.style.display === 'block' ? ticketDisplay : getTicketBtn.parentNode;
+            insertAfter.parentNode.insertBefore(alertDiv, insertAfter.nextSibling);
+            
+            // Auto-remove alert after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Queue Display</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Full screen display styling for waiting room monitor */
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .display-header {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding: 2rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .hospital-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .current-ticket-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 3rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .current-ticket-label {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #81c784;
+            font-weight: bold;
+        }
+        
+        .current-ticket-number {
+            font-size: 8rem;
+            font-weight: bold;
+            color: #4caf50;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            margin: 2rem 0;
+            animation: pulse 2s infinite;
+            background: linear-gradient(45deg, #4caf50, #81c784);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .no-current-ticket {
+            font-size: 3rem;
+            color: #ff9800;
+            margin: 2rem 0;
+        }
+        
+        .waiting-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .waiting-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #64b5f6;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .waiting-tickets {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .waiting-ticket {
+            background: linear-gradient(45deg, #2196f3, #64b5f6);
+            padding: 2rem;
+            border-radius: 15px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+        
+        .waiting-ticket:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+        }
+        
+        .no-waiting {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #ffb74d;
+            font-style: italic;
+        }
+        
+        .last-updated {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+        }
+        
+        .loading-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(76,175,80,0.8);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: none;
+        }
+        
+        /* Responsive design for different screen sizes */
+        @media (max-width: 768px) {
+            .hospital-title {
+                font-size: 2rem;
+            }
+            
+            .current-ticket-number {
+                font-size: 5rem;
+            }
+            
+            .current-ticket-label,
+            .waiting-title {
+                font-size: 1.8rem;
+            }
+            
+            .waiting-ticket {
+                font-size: 1.8rem;
+                min-width: 120px;
+            }
+        }
+        
+        /* Animation for new tickets */
+        .ticket-fade-in {
+            animation: fadeInUp 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="display-header">
+        <div class="container">
+            <h1 class="hospital-title">
+                <i class="fas fa-hospital me-3"></i>
+                Hospital Queue Display
+            </h1>
+            <p class="fs-4 mb-0">Please wait for your number to be called</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Current Ticket Being Served Section -->
+        <div class="current-ticket-section">
+            <div class="current-ticket-label">
+                <i class="fas fa-user-md me-3"></i>
+                Now Serving
+            </div>
+            
+            {% if current_ticket %}
+                <div id="currentTicketNumber" class="current-ticket-number">
+                    {{ current_ticket.ticket_number }}
+                </div>
+                <p class="fs-3">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    Please proceed to Room 1
+                </p>
+            {% else %}
+                <div id="currentTicketNumber" class="no-current-ticket">
+                    <i class="fas fa-clock me-2"></i>
+                    Waiting for next patient
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Next Waiting Tickets Section -->
+        <div class="waiting-section">
+            <h2 class="waiting-title">
+                <i class="fas fa-list me-3"></i>
+                Next in Queue
+            </h2>
+            
+            <div id="waitingTickets" class="waiting-tickets">
+                {% if waiting_tickets %}
+                    {% for ticket in waiting_tickets %}
+                        <div class="waiting-ticket ticket-fade-in">
+                            {{ ticket.ticket_number }}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-waiting">
+                        <i class="fas fa-check-circle me-2"></i>
+                        No tickets waiting
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Last Updated Timestamp -->
+    <div id="lastUpdated" class="last-updated">
+        <i class="fas fa-sync-alt me-2"></i>
+        Last updated: <span id="updateTime">--:--:--</span>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator">
+        <i class="fas fa-spinner fa-spin me-2"></i>
+        Updating...
+    </div>
+
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto-refresh functionality for real-time updates
+        let lastCurrentTicket = null;
+        let lastWaitingTickets = [];
+        
+        // Function to update display data from server
+        function updateDisplay() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+            
+            fetch('/display_data')
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    loadingIndicator.style.display = 'none';
+                    
+                    // Update current ticket if changed
+                    updateCurrentTicket(data.current_ticket);
+                    
+                    // Update waiting tickets if changed
+                    updateWaitingTickets(data.waiting_tickets);
+                    
+                    // Update last updated timestamp
+                    updateTimestamp();
+                    
+                    // Store current state for comparison
+                    lastCurrentTicket = data.current_ticket;
+                    lastWaitingTickets = [...data.waiting_tickets];
+                })
+                .catch(error => {
+                    console.error('Error updating display:', error);
+                    loadingIndicator.style.display = 'none';
+                });
+        }
+        
+        // Function to update current ticket display
+        function updateCurrentTicket(newTicket) {
+            const currentTicketElement = document.getElementById('currentTicketNumber');
+            
+            if (newTicket && newTicket !== lastCurrentTicket) {
+                // New ticket is being served
+                currentTicketElement.innerHTML = newTicket;
+                currentTicketElement.className = 'current-ticket-number';
+                
+                // Add pulse animation for new ticket
+                currentTicketElement.style.animation = 'none';
+                setTimeout(() => {
+                    currentTicketElement.style.animation = 'pulse 2s infinite';
+                }, 10);
+                
+                // Update the "proceed to room" message
+                const proceedMessage = currentTicketElement.parentNode.querySelector('p');
+                if (proceedMessage) {
+                    proceedMessage.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Please proceed to Room 1';
+                }
+                
+            } else if (!newTicket && lastCurrentTicket) {
+                // No ticket being served
+                currentTicketElement.innerHTML = '<i class="fas fa-clock me-2"></i>Waiting for next patient';
+                currentTicketElement.className = 'no-current-ticket';
+                
+                // Hide the "proceed to room" message
+                const proceedMessage = currentTicketElement.parentNode.querySelector('p');
+                if (proceedMessage) {
+                    proceedMessage.style.display = 'none';
+                }
+            }
+        }
+        
+        // Function to update waiting tickets display
+        function updateWaitingTickets(newWaitingTickets) {
+            const waitingContainer = document.getElementById('waitingTickets');
+            
+            // Check if waiting tickets have changed
+            const ticketsChanged = JSON.stringify(newWaitingTickets) !== JSON.stringify(lastWaitingTickets);
+            
+            if (ticketsChanged) {
+                // Clear existing tickets
+                waitingContainer.innerHTML = '';
+                
+                if (newWaitingTickets && newWaitingTickets.length > 0) {
+                    // Add new waiting tickets with animation
+                    newWaitingTickets.forEach((ticket, index) => {
+                        const ticketElement = document.createElement('div');
+                        ticketElement.className = 'waiting-ticket ticket-fade-in';
+                        ticketElement.textContent = ticket;
+                        
+                        // Stagger animation for multiple tickets
+                        ticketElement.style.animationDelay = `${index * 0.1}s`;
+                        
+                        waitingContainer.appendChild(ticketElement);
+                    });
+                } else {
+                    // No waiting tickets
+                    waitingContainer.innerHTML = `
+                        <div class="no-waiting">
+                            <i class="fas fa-check-circle me-2"></i>
+                            No tickets waiting
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Function to update timestamp
+        function updateTimestamp() {
+            const updateTimeElement = document.getElementById('updateTime');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            updateTimeElement.textContent = timeString;
+        }
+        
+        // Initialize display on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial update
+            updateDisplay();
+            
+            // Set up automatic refresh every 3 seconds
+            setInterval(updateDisplay, 3000);
+            
+            // Update timestamp every second
+            setInterval(updateTimestamp, 1000);
+        });
+        
+        // Handle visibility change (pause updates when tab is not visible)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // Tab became visible, update immediately
+                updateDisplay();
+            }
+        });
+        
+        // Optional: Add keyboard shortcuts for manual refresh
+        document.addEventListener('keydown', function(event) {
+            // Press 'R' to manually refresh
+            if (event.key === 'r' || event.key === 'R') {
+                updateDisplay();
+            }
+            
+            // Press 'F' for fullscreen toggle
+            if (event.key === 'f' || event.key === 'F') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
